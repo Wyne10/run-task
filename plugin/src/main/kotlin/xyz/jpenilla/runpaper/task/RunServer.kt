@@ -16,10 +16,12 @@
  */
 package xyz.jpenilla.runpaper.task
 
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import xyz.jpenilla.runpaper.minecraftVersionIsSameOrNewerThan
 import xyz.jpenilla.runtask.pluginsapi.PluginDownloadService
@@ -27,6 +29,7 @@ import xyz.jpenilla.runtask.service.DownloadsAPIService
 import xyz.jpenilla.runtask.task.RunWithPlugins
 import xyz.jpenilla.runtask.util.FileCopyingPluginHandler
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -52,6 +55,9 @@ public abstract class RunServer : RunWithPlugins() {
   @get:Input
   public abstract val legacyPluginLoading: Property<Boolean>
 
+  @get:Internal
+  public abstract val serverTemplates: DirectoryProperty
+
   override fun init() {
     super.init()
 
@@ -76,6 +82,7 @@ public abstract class RunServer : RunWithPlugins() {
     }
 
     setupPlugins(workingDir)
+    extractServerTemplate(workingDir)
   }
 
   private fun setupPlugins(workingDir: Path) {
@@ -98,6 +105,31 @@ public abstract class RunServer : RunWithPlugins() {
     }
 
     return version.get().minecraftVersionIsSameOrNewerThan(1, 16, 5)
+  }
+
+  private fun extractServerTemplate(workingDir: Path) {
+    val templateFile = serverTemplates.file("${version.get()}.zip").orNull?.asFile ?: return
+
+    logger.lifecycle("Using {} template", templateFile.name)
+
+    java.util.zip.ZipFile(templateFile).use { zip ->
+      zip.entries().asSequence().forEach { entry ->
+        val outPath = workingDir.resolve(entry.name)
+
+        if (entry.isDirectory) {
+          Files.createDirectories(outPath)
+        } else {
+          if (Files.exists(outPath)) return@forEach
+          Files.createDirectories(outPath.parent)
+
+          zip.getInputStream(entry).use { input ->
+            Files.newOutputStream(outPath).use { output ->
+              input.copyTo(output)
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -134,5 +166,14 @@ public abstract class RunServer : RunWithPlugins() {
    */
   public fun legacyPluginLoading() {
     legacyPluginLoading.set(true)
+  }
+
+  /**
+   * Convenience method to set the [serverTemplates] property.
+   *
+   * @param templates templates directory
+   */
+  public fun serverTemplates(templates: File) {
+    serverTemplates.set(templates)
   }
 }

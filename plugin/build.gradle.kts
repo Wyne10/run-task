@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "xyz.jpenilla"
-version = "2.3.1"
+version = "2.3.2"
 description = "Gradle plugins adding run tasks for Minecraft server and proxy software"
 
 repositories {
@@ -49,7 +49,6 @@ tasks {
 indra {
   apache2License()
   github("jpenilla", "run-task")
-  publishSnapshotsTo("jmp", "https://repo.jpenilla.xyz/snapshots")
   configurePublications {
     pom {
       developers {
@@ -60,7 +59,10 @@ indra {
       }
     }
   }
-  signWithKeyFromProperties("signingKey", "signingPassword")
+}
+
+tasks.withType<Sign>().configureEach {
+  enabled = false
 }
 
 indraSpotlessLicenser {
@@ -108,4 +110,17 @@ indraPluginPublishing {
     "Gradle plugin adding a task to run a Waterfall proxy",
     tags("waterfall", "proxy")
   )
+}
+
+publishing {
+  repositories {
+    maven {
+      name = "myMavenRepo"
+      url = uri(findProperty("myMavenRepoWriteUrl") as String)
+      credentials {
+        username = findProperty("myMavenRepoWriteUsername") as String
+        password = findProperty("myMavenRepoWritePassword") as String
+      }
+    }
+  }
 }
