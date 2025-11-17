@@ -16,6 +16,7 @@
  */
 package xyz.jpenilla.runpaper.task
 
+import io.papermc.paperweight.util.fileExists
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
@@ -109,6 +110,7 @@ public abstract class RunServer : RunWithPlugins() {
 
   private fun extractServerTemplate(workingDir: Path) {
     val templateFile = serverTemplates.file("${version.get()}.zip").orNull?.asFile ?: return
+    if (!templateFile.exists()) return
 
     logger.lifecycle("Using {} template", templateFile.name)
 
