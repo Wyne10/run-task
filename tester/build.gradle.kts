@@ -17,7 +17,7 @@ val paperPlugins = runPaper.downloadPluginsSpec {
 
 tasks {
   withType<RunServer> {
-    minecraftVersion("1.20.4")
+    minecraftVersion("1.19.4")
     serverTemplates(layout.projectDirectory.dir("run-templates").asFile)
     runDirectory.set(layout.projectDirectory.dir("runServer"))
     downloadPlugins.from(paperPlugins)

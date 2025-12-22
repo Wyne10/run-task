@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "xyz.jpenilla"
-version = "2.3.3"
+version = "2.3.4"
 description = "Gradle plugins adding run tasks for Minecraft server and proxy software"
 
 repositories {

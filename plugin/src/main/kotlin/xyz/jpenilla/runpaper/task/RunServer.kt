@@ -115,8 +115,22 @@ public abstract class RunServer : RunWithPlugins() {
     logger.lifecycle("Using {} template", templateFile.name)
 
     java.util.zip.ZipFile(templateFile).use { zip ->
+
+      val rootPrefix = zip.entries().asSequence()
+        .map { it.name }
+        .firstOrNull { it.contains("/") }
+        ?.substringBefore("/") + "/"
+
       zip.entries().asSequence().forEach { entry ->
-        val outPath = workingDir.resolve(entry.name)
+        val relativeName = if (entry.name.startsWith(rootPrefix)) {
+          entry.name.removePrefix(rootPrefix)
+        } else {
+          entry.name
+        }
+
+        if (relativeName.isBlank()) return@forEach
+
+        val outPath = workingDir.resolve(relativeName)
 
         if (entry.isDirectory) {
           Files.createDirectories(outPath)
